@@ -18,11 +18,10 @@ enum GamePacket {
   GAME_UP = 0x20,
   GAME_STOP = 0x40,
   GAME_SHIFT = 0x80
-}
+};
 
 /// Send an individual bit
 void sendBit(bool b) {
-
   // from https://sbeach.up.seesaa.net/image/141115_02_66SR_keywire.png
   if(b) {
     // High is 501us high, 209us low
