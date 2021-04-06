@@ -42,10 +42,17 @@ void sendBit(bool b) {
   // communication
 }
 
-/// Send from bit 7 .. bit 0
+/// Send from bit 0 .. bit 7
 void sendByteLSBFirst(unsigned char b) {
   // may be a good candidate to unroll, if the compiler can't
-  for(unsigned int i = 0x1; i <= 0x80; i <<= 1) {
+  for(unsigned short i = 0x1; i <= 0x80; i <<= 1) {
+    sendBit((b & i) != 0);
+  }
+}
+
+void sendByteMSBFirst(unsigned char b) {
+  // may be a good candidate to unroll, if the compiler can't
+  for(unsigned short i = 0x80; i >= 0x1; i >>= 1) {
     sendBit((b & i) != 0);
   }
 }
@@ -73,6 +80,8 @@ void setup() {
 }
 
 void loop() {
+  // TODO: might be neat to do a repl like "send 001:f4" to test typing
+  
   // http://sbeach.seesaa.net/article/408970013.html
   // minimum interval between datagrams is 4657us
   delay(250); // just hang around awhile
