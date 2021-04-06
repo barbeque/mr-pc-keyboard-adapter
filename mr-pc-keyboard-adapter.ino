@@ -50,8 +50,8 @@ void sendByteLSBFirst(unsigned char b) {
   }
 }
 
+/// Send from bit 7 .. bit 0
 void sendByteMSBFirst(unsigned char b) {
-  // may be a good candidate to unroll, if the compiler can't
   for(unsigned short i = 0x80; i >= 0x1; i >>= 1) {
     sendBit((b & i) != 0);
   }
