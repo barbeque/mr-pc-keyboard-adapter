@@ -8,17 +8,7 @@
 // the wired serial data output pin
 #define PIN_PC66_OUTPUT 13
 
-// Signals sent in "game" mode
-enum GamePacket {
-  GAME_SPACE = 0x1,
-  GAME_RESERVED = 0x2,
-  GAME_LEFT = 0x4,
-  GAME_RIGHT = 0x8,
-  GAME_DOWN = 0x10,
-  GAME_UP = 0x20,
-  GAME_STOP = 0x40,
-  GAME_SHIFT = 0x80
-};
+#define FUDGE 0
 
 /// Send an individual bit
 void sendBit(bool b) {
@@ -26,75 +16,108 @@ void sendBit(bool b) {
   if(b) {
     // High is 501us high, 209us low
     digitalWrite(PIN_PC66_OUTPUT, HIGH);
-    delayMicroseconds(501);
+    delayMicroseconds(501 + FUDGE);
     digitalWrite(PIN_PC66_OUTPUT, LOW);
-    delayMicroseconds(209);
+    delayMicroseconds(209 + FUDGE);
   }
   else {
     // Low is 149us high, 209us low
     digitalWrite(PIN_PC66_OUTPUT, HIGH);
-    delayMicroseconds(149);
+    delayMicroseconds(149 + FUDGE);
     digitalWrite(PIN_PC66_OUTPUT, LOW);
-    delayMicroseconds(209);
+    delayMicroseconds(209 + FUDGE);
   }
 
   // it seems like you want to return to high when you end
   // communication
+  digitalWrite(PIN_PC66_OUTPUT, HIGH);
 }
 
-/// Send from bit 0 .. bit 7
-void sendByteLSBFirst(unsigned char b) {
-  // may be a good candidate to unroll, if the compiler can't
-  for(unsigned short i = 0x1; i <= 0x80; i <<= 1) {
-    sendBit((b & i) != 0);
-  }
-}
-
-/// Send from bit 7 .. bit 0
-void sendByteMSBFirst(unsigned char b) {
-  for(unsigned short i = 0x80; i >= 0x1; i >>= 1) {
-    sendBit((b & i) != 0);
-  }
-}
-
-void sendWiredHeader() {
-  // header 1: pull the line down for 2495us
+void sendHeader() {
   digitalWrite(PIN_PC66_OUTPUT, LOW);
-  delayMicroseconds(2495);
-  // header 2: 501 high 209 low (a logic "1")
-  sendBit(true);
+  delayMicroseconds(13 * 191);
+  digitalWrite(PIN_PC66_OUTPUT, HIGH);
+  delayMicroseconds(13 * 39);
+
+  digitalWrite(PIN_PC66_OUTPUT, LOW);
+  delayMicroseconds(13 * 17);
+  digitalWrite(PIN_PC66_OUTPUT, HIGH);
+  // TODO: check this, i don't understand the portb shit
 }
 
-void sendGamePacket(const GamePacket& g) {
-  sendBit(false);
-  sendBit(true);
-  sendBit(false);
-  sendByteLSBFirst((unsigned char)g);
+void sendByte(unsigned char ct, unsigned char dt) {
+  char i;
+  char cttmp, dttmp;
+  char pt;
+  cttmp = ct;
+  dttmp = dt;
+
+  sendHeader();
+  pt = 0x00;
+
+  for(i = 0; i < 3; ++i) {
+    if((ct & 0x01) != 0x00) {
+      sendBit(true);
+      pt = pt ^ 0x01;
+    }
+    else {
+      sendBit(false);
+    }
+    ct = ct >> 1;
+  }
+
+  for (i = 0;i < 8;i ++) {
+    if ( (dt & 0x01) != 0x00 ) {
+      sendBit(true);
+      pt = pt ^ 0x01;
+    } else {
+      sendBit(false);
+    }
+    dt = dt >> 1;
+  }
+
+  if(pt != 0x00) {
+    sendBit(true);
+  }
+  else {
+    sendBit(false);
+  }
+
+  // inverse time
+  ct = cttmp;
+  dt = dttmp;
+  
+  for (i = 0;i < 3;i ++) {
+    if ( (ct & 0x01) != 0x00 ) {
+      sendBit(false);
+    } else {
+      sendBit(true);
+    }
+    ct = ct >> 1;
+  }
+
+  for (i = 0;i < 8;i ++) {
+    if ( (dt & 0x01) != 0x00 ) {
+      sendBit(false);
+    } else {
+      sendBit(true);
+    }
+    dt = dt >> 1;
+  }
+
+  if ( pt != 0x00 ) {
+    sendBit(false);
+  } else {
+    sendBit(true);
+  }
 }
 
 void setup() {
-  Serial.begin(9600);
-
   pinMode(PIN_PC66_OUTPUT, OUTPUT);
   digitalWrite(PIN_PC66_OUTPUT, HIGH);
 }
 
 void loop() {
-  // TODO: might be neat to do a repl like "send 001:f4" to test typing
-  
-  // http://sbeach.seesaa.net/article/408970013.html
-  // minimum interval between datagrams is 4657us
-  delay(250); // just hang around awhile
-
-  // send the code for F5
-  sendWiredHeader();
-  // F5 - 001:F4
-  sendBit(true);
-  sendBit(false);
-  sendBit(false); // remember, LSB first!  
-
-  sendByteLSBFirst(0xF4);
-
-  // reset the line to high
-  digitalWrite(PIN_PC66_OUTPUT, HIGH);
+  delay(1250);
+  sendByte(0x0, 0x31); // '1'
 }
