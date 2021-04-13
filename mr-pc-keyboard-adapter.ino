@@ -149,7 +149,10 @@ KeyCode translateKeycode(const uint16_t &raw) {
   unsigned char key = raw & 0xff;
   unsigned char control = 0x00;
 
-  Serial.print("Raw: ");
+  // TODO: CTRL table
+  // TODO: ALT table
+
+  Serial.print("Raw: 0x");
   Serial.println(raw, HEX);
   
   if(key >= 'A' && key <= 'Z' && !(raw & PS2_SHIFT)) {
@@ -158,7 +161,12 @@ KeyCode translateKeycode(const uint16_t &raw) {
   }
   if(key >= '0' && key <= '9' && (raw & PS2_SHIFT)) {
     // num row
-    key -= 0x10; // except for 0x30 (0)
+    if(key == 0x30) { // '0'
+      key = 0xa6;
+    }
+    else {
+      key -= 0x10; // except for 0x30 (0). why?
+    }
   }
 
   if(raw == 0x11e) {
@@ -192,6 +200,51 @@ KeyCode translateKeycode(const uint16_t &raw) {
 
   if(raw == 0x11c) { // backspace
     key = 0x7f; // DEL?
+  }
+
+  // cursor keys
+  if(raw == 0x115) { // left
+    key = 0x1d;
+  }
+  else if(raw == 0x116) { // right
+    key = 0x1c;
+  }
+  else if(raw == 0x117) { // up
+    key = 0x1e;
+  }
+  else if(raw == 0x118) { // down 
+    key = 0x1f; // TODO: Send 'game' codes too, since I bet this won't work well with games
+  }
+
+  if(raw & PS2_SHIFT) {
+    // there's gotta be a better way to handle these
+    switch(key) {
+      case 0x3B:
+        key = 0x2B; break; // '+'
+      case 0x3A:
+        key = 0x2A; break; // '*'
+      case 0xF0:
+        key = 0xF5; break; // turn F1 into F6
+      case 0xF1:
+        key = 0xF6; break; // turn F2 into F7
+      case 0xF2:
+        key = 0xF7; break; // turn F3 into F8
+      case 0xF3:
+        key = 0xF8; break; // turn F4 into F9
+      case 0xF4:
+        key = 0xF9; break; // turn F5 into F10
+      case 0x5B:
+        key = 0xA2; break; // turn '[' into 0xA2
+      case 0x5D:
+        key = 0xA3; break; // turn ']' into 0xA2
+    }
+  }
+
+  if(raw & PS2_CTRL) {
+    // Sending CTRL+A..Z - CTRL+C is necessary
+    if(toupper(key) >= 'A' && toupper(key) <= 'Z') {
+      key = (toupper(key) - 'A') + 1; // 000:001 for ctrl+A
+    }
   }
 
   return KeyCode {
