@@ -239,6 +239,19 @@ KeyCode translateKeycode(const uint16_t &raw) {
         key = 0xA3; break; // turn ']' into 0xA2
     }
   }
+  else {
+    // more hacks
+    switch(key) {
+      case 0x3c:
+        key = 0x2c; break; // ,
+      case 0x3d:
+        key = 0x2d; break; // -
+      case 0x3e:
+        key = 0x2e; break; // .
+      case 0x3f:
+        key = 0x2f; break; // /
+    }
+  }
 
   if(raw & PS2_CTRL) {
     // Sending CTRL+A..Z - CTRL+C is necessary
