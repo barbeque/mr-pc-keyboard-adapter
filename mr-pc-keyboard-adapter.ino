@@ -181,6 +181,7 @@ void setup() {
 #define PS2_RAW_RIGHT 0x116
 #define PS2_RAW_UP 0x117
 #define PS2_RAW_DOWN 0x118
+#define PS2_RAW_SPACE 0x11f
 
 KeyCode translateKeycode(const uint16_t &raw) {
   unsigned char key = raw & 0xff;
@@ -319,6 +320,8 @@ void updateGameKeys(const uint16_t &raw) {
         gameState.up = 0; break;
       case PS2_RAW_DOWN:
         gameState.down = 0; break;
+      case PS2_RAW_SPACE:
+        gameState.space = 0; break;
       // TODO: How does STOP work?
       default:
         isDirty = false; break;
@@ -326,6 +329,7 @@ void updateGameKeys(const uint16_t &raw) {
   }
   else {
     switch(raw) {
+      // FIXME: what if this is autorepeating and we already set it? ugh
       case PS2_RAW_LEFT:
         gameState.left = 0xFF; break;
       case PS2_RAW_RIGHT:
@@ -334,6 +338,8 @@ void updateGameKeys(const uint16_t &raw) {
         gameState.up = 0xFF; break;
       case PS2_RAW_DOWN:
         gameState.down = 0xFF; break;
+      case PS2_RAW_SPACE:
+        gameState.space = 0xFF; break;
       // TODO: How does STOP work?
       default:
         isDirty = false; break;
