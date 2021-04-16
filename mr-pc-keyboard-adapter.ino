@@ -328,21 +328,27 @@ void updateGameKeys(const uint16_t &raw) {
     }
   }
   else {
-    switch(raw) {
-      // FIXME: what if this is autorepeating and we already set it? ugh
-      case PS2_RAW_LEFT:
-        gameState.left = 0xFF; break;
-      case PS2_RAW_RIGHT:
-        gameState.right = 0xFF; break;
-      case PS2_RAW_UP:
-        gameState.up = 0xFF; break;
-      case PS2_RAW_DOWN:
-        gameState.down = 0xFF; break;
-      case PS2_RAW_SPACE:
-        gameState.space = 0xFF; break;
-      // TODO: How does STOP work?
-      default:
-        isDirty = false; break;
+    // Check to see if the key is "already pressed" because otherwise
+    // autorepeat will set dirty flag an cause extra packets to be sent
+    // despite no actual change in state
+    if(raw == PS2_RAW_LEFT && gameState.left == 0) {
+      gameState.left = 0xFF;
+    }
+    else if(raw == PS2_RAW_RIGHT && gameState.right == 0) {
+      gameState.right = 0xFF;
+    }
+    else if(raw == PS2_RAW_UP && gameState.up == 0) {
+      gameState.up = 0xFF;
+    }
+    else if(raw == PS2_RAW_DOWN && gameState.down == 0) {
+      gameState.down = 0xFF;
+    }
+    else if(raw == PS2_RAW_SPACE && gameState.space == 0) {
+      gameState.space = 0xFF;
+    }
+    // TODO: How does STOP work?
+    else {
+      isDirty = false;
     }
   }
 
