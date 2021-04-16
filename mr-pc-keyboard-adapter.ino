@@ -177,6 +177,11 @@ void setup() {
   gameState = {};
 }
 
+#define PS2_RAW_LEFT 0x115
+#define PS2_RAW_RIGHT 0x116
+#define PS2_RAW_UP 0x117
+#define PS2_RAW_DOWN 0x118
+
 KeyCode translateKeycode(const uint16_t &raw) {
   unsigned char key = raw & 0xff;
   unsigned char control = 0x00;
@@ -235,17 +240,17 @@ KeyCode translateKeycode(const uint16_t &raw) {
   }
 
   // cursor keys
-  if(raw == 0x115) { // left
+  if(raw == PS2_RAW_LEFT) { // left
     key = 0x1d;
   }
-  else if(raw == 0x116) { // right
+  else if(raw == PS2_RAW_RIGHT) { // right
     key = 0x1c;
   }
-  else if(raw == 0x117) { // up
+  else if(raw == PS2_RAW_UP) { // up
     Serial.println("cursor up");
     key = 0x1e;
   }
-  else if(raw == 0x118) { // down 
+  else if(raw == PS2_RAW_DOWN) { // down 
     key = 0x1f; // TODO: Send 'game' codes too, since I bet this won't work well with games
   }
 
@@ -299,10 +304,54 @@ KeyCode translateKeycode(const uint16_t &raw) {
   };
 }
 
+void updateGameKeys(const uint16_t &raw) {
+  // redundant logic, but we'll be ok
+  if(raw & 0xff == 0x00) { return; }
+  bool isDirty = true;
+  
+  if(raw & PS2_BREAK) {
+    switch(raw) {
+      case PS2_RAW_LEFT:
+        gameState.left = 0; break;
+      case PS2_RAW_RIGHT:
+        gameState.right = 0; break;
+      case PS2_RAW_UP:
+        gameState.up = 0; break;
+      case PS2_RAW_DOWN:
+        gameState.down = 0; break;
+      // TODO: How does STOP work?
+      default:
+        isDirty = false; break;
+    }
+  }
+  else {
+    switch(raw) {
+      case PS2_RAW_LEFT:
+        gameState.left = 0xFF; break;
+      case PS2_RAW_RIGHT:
+        gameState.right = 0xFF; break;
+      case PS2_RAW_UP:
+        gameState.up = 0xFF; break;
+      case PS2_RAW_DOWN:
+        gameState.down = 0xFF; break;
+      // TODO: How does STOP work?
+      default:
+        isDirty = false; break;
+    }
+  }
+
+  if(isDirty) {
+    // our knowledge of the game keys changed, send the new packet
+    sendGameModePacket(gameState);
+  }
+}
+
 void loop() {
   uint16_t raw = keyboard.read();
   unsigned char asciiKey = raw & 0xff;
   bool isBreakCode = raw & PS2_BREAK;
+
+  updateGameKeys(raw);
   
   if(!isBreakCode && asciiKey != 0x00 && raw != 0x4106 && raw != 0x4107) {
     // no break codes necessary for 6601SR; just send autorepeat
