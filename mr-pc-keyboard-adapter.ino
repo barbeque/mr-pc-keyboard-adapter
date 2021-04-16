@@ -13,6 +13,17 @@ typedef struct {
   unsigned char key;
 } KeyCode;
 
+typedef struct {
+  unsigned char space;
+  unsigned char alwaysZero;
+  unsigned char left;
+  unsigned char right;
+  unsigned char down;
+  unsigned char up;
+  unsigned char stop;
+  unsigned char shift;
+} GameModePacket;
+
 /// Send an individual bit
 void sendBit(bool b) {
   // from https://sbeach.up.seesaa.net/image/141115_02_66SR_keywire.png
@@ -117,7 +128,26 @@ void sendByte(unsigned char ct, unsigned char dt) {
   }
 }
 
+void sendGameModePacket(GameModePacket& data) {
+  // send 010
+  unsigned char header = 0b010;
+  unsigned char output = 0;
+
+  // hope this is in the right order and i don't have to reverse the byte
+  output |= data.space ? 0x80 : 0x00;
+  output |= data.alwaysZero ? 0x40 : 0x00;
+  output |= data.left ? 0x20 : 0x00;
+  output |= data.right ? 0x10 : 0x00;
+  output |= data.down ? 0x08 : 0x00;
+  output |= data.up ? 0x04 : 0x00;
+  output |= data.stop ? 0x02 : 0x00;
+  output |= data.shift ? 0x01 : 0x00;
+  
+  sendByte(header, output);
+}
+
 PS2KeyAdvanced keyboard;
+GameModePacket gameState = {};
 
 void setup() {
   pinMode(PIN_PC66_OUTPUT, OUTPUT);
@@ -143,6 +173,8 @@ void setup() {
       Serial.println(c, HEX);
     }
   }
+
+  gameState = {};
 }
 
 KeyCode translateKeycode(const uint16_t &raw) {
@@ -210,6 +242,7 @@ KeyCode translateKeycode(const uint16_t &raw) {
     key = 0x1c;
   }
   else if(raw == 0x117) { // up
+    Serial.println("cursor up");
     key = 0x1e;
   }
   else if(raw == 0x118) { // down 
