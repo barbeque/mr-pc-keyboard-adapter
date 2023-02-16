@@ -24,9 +24,11 @@ You will require the following parts to assemble this project:
 To assemble:
  1. Connect PS/2 data to pin 5 of the Arduino.
  2. Connect PS/2 clock to pin PD2 of the Arduino.
- 3. Connect the serial output pin, pin 3, of the 4p4c connector to pin 13 of the Arduino. Place the resistor in series so that it protects the Arduino.
- 4. Connect pins 2 and 4 of the 4p4c connector to ground, sharing it with the Arduino's ground.
- 5. (Optional) Connect pin 1 of the 4p4c connector to the Arduino's 5-volt input power pin. If you don't do this, you will have to power the Arduino over USB, which may be appropriate if you are updating the firmware at the same time.
+ 3. Connect PS/2 ground to ground of the Arduino.
+ 4. Connect PS/2 power to 5V supply of the Arduino.
+ 5. Connect the serial output pin, pin 3, of the 4p4c connector to pin 13 of the Arduino. Place the resistor in series so that it protects the Arduino.
+ 6. Connect pins 2 and 4 of the 4p4c connector to ground, sharing it with the Arduino's ground.
+ 7. (Optional) Connect pin 1 of the 4p4c connector to the Arduino's 5-volt input power pin. If you don't do this, you will have to power the Arduino over USB, which may be appropriate if you are updating the firmware at the same time.
 
 A PCB version is expected in the future, but it is not a priority at this time.
 
