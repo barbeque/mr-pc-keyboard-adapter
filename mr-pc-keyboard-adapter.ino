@@ -190,8 +190,49 @@ KeyCode translateKeycode(const uint16_t &raw) {
   // TODO: CTRL table
   // TODO: ALT table
 
+  /*
+  patches to make (based on ibm junk keyboard)
+
+  RAWCODE   66SRCODE  COMMENT
+  0x3b      0x2c      comma √
+  0x5f      0x3d      equals √
+  0x405f    0x2b      plus √
+  0x3e      0x2f?     slash √
+  0x403e    0x3f?     question mark √
+  0x3d      0x2e      period √
+  0x403b    0x3c      < √
+  0x403d    0x3e      > √
+  0x3c      0x2d      - 
+
+  have to decide if i want a purely western keymap or a purely japanese one here
+  also have to make a data structure for this keymap so we can swap them out.
+
+  maybe also an interactive keymap builder
+  */
+
   Serial.print("Raw: 0x");
   Serial.println(raw, HEX);
+
+  // comma hack
+  if(raw == 0x3b) { return KeyCode { control: 0x00, key: 0x2c }; }
+  // shift + comma (<) hack
+  if(raw == 0x403b) { return KeyCode { control: 0x00, key: 0x3c }; }
+  // minus hack
+  if(raw == 0x3c) { return KeyCode { control: 0x00, key: 0x2d }; }
+  // shift + minus (underscore) hack
+  if(raw == 0x403c) { return KeyCode { control: 0x00, key: 0x5f }; }
+  // period hack
+  if(raw == 0x3d) { return KeyCode { control: 0x00, key: 0x2e }; }
+  // shift + period (>) hack
+  if(raw == 0x403d) { return KeyCode { control: 0x00, key: 0x3e }; }
+  // equals hack
+  if(raw == 0x5f) { return KeyCode { control: 0x00, key: 0x3d }; }
+  // plus hack
+  if(raw == 0x405f) { return KeyCode { control: 0x00, key: 0x2b }; }
+  // slash hack
+  if(raw == 0x3e) { return KeyCode { control: 0x00, key: 0x2f }; }
+  // question-mark hack
+  if(raw == 0x403e) { return KeyCode { control: 0x00, key: 0x3f }; }
   
   if(key >= 'A' && key <= 'Z' && !(raw & PS2_SHIFT)) {
     // default seems to be uppercase? that's weird
